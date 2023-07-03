@@ -10,8 +10,42 @@ class Itemvariant extends Controller
     //
     public function index()
     {
-        $itemvariants = MItemvariant::all();
-        return response()->json(['data' => $itemvariants]);
+        $itemvariants = MItemvariant::paginate(20);
+        return response()->json([
+            'data' => $itemvariants,
+            'current_page' => $itemvariants->currentPage(),
+            'last_page' => $itemvariants->lastPage(),
+            'per_page' => $itemvariants->perPage(),
+            'total' => $itemvariants->total()
+        ]);
+    }
+
+    public function cari(Request $request)
+    {
+        $perPage = 10; // Jumlah data yang ditampilkan per halaman
+
+        $query = MItemvariant::query();
+
+        if ($request->has('search')) {
+            $searchTerm = $request->input('search');
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+        if ($request->has('sort')) {
+            $sortColumn = $request->input('sort.column');
+            $sortDirection = $request->input('sort.direction', 'asc');
+    
+            $query->orderBy($sortColumn, $sortDirection);
+        }
+
+        $itemvarian = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $itemvarian->items(),
+            'current_page' => $itemvarian->currentPage(),
+            'last_page' => $itemvarian->lastPage(),
+            'per_page' => $itemvarian->perPage(),
+            'total' => $itemvarian->total(),
+        ]);
     }
 
     public function show($id)

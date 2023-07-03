@@ -9,8 +9,42 @@ class Brand extends Controller
 {
     public function index()
     {
-        $brands = MBrand::all();
-        return response()->json(['data' => $brands]);
+        $brands = MBrand::paginate(20);
+        return response()->json([
+            'data' => $brands,
+            'current_page' => $brands->currentPage(),
+            'last_page' => $brands->lastPage(),
+            'per_page' => $brands->perPage(),
+            'total' => $brands->total()
+        ]);
+    }
+    public function cari(Request $request)
+    {
+        $perPage = 10; // Jumlah data yang ditampilkan per halaman
+
+        $query = MBrand::query();
+
+        if ($request->has('search')) {
+            $searchTerm = $request->input('search');
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+
+        if ($request->has('sort')) {
+            $sortColumn = $request->input('sort.column');
+            $sortDirection = $request->input('sort.direction', 'asc');
+    
+            $query->orderBy($sortColumn, $sortDirection);
+        }
+
+        $brand = $query->paginate($perPage);
+
+        return response()->json([
+            'data' => $brand->items(),
+            'current_page' => $brand->currentPage(),
+            'last_page' => $brand->lastPage(),
+            'per_page' => $brand->perPage(),
+            'total' => $brand->total(),
+        ]);
     }
 
     public function show($id)
